@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팩트체크 게임</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --accent-glow: #06b6d4;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg-color) 100%);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .progress {
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--accent-glow);
+            box-shadow: 0 0 8px var(--accent-glow);
+            border-radius: 3px;
+            transition: width 0.1s linear;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 340px;
+            justify-content: center;
+        }
+
+        .card img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .headline {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.6;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .card.correct {
+            border-color: var(--success-color);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .card.incorrect {
+            border-color: var(--error-color);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-true {
+            background: #10b981;
+        }
+
+        .btn-fake {
+            background: #ef4444;
+        }
+
+        .explanation-box {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .explanation-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .explanation-box.correct .explanation-title {
+            color: var(--success-color);
+        }
+
+        .explanation-box.incorrect .explanation-title {
+            color: var(--error-color);
+        }
+
+        .explanation-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            word-break: keep-all;
+        }
+
+        .btn-next {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            display: none;
+        }
+
+        .result-screen {
+            text-align: center;
+            padding: 40px 10px;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .result-score {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .btn-restart {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="play-area">
+        <div class="header">
+            <span class="title">팩트체크 게임</span>
+            <span class="progress" id="progress-text">1 / 3</span>
+        </div>
+
+        <div class="timer-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+
+        <div class="card" id="news-card">
+            <div id="image-wrap" style="width:100%; display:none;"></div>
+            <p class="headline" id="news-headline"></p>
+        </div>
+
+        <div class="explanation-box" id="explanation-box">
+            <div class="explanation-title" id="result-status"></div>
+            <div class="explanation-text" id="reason-text"></div>
+        </div>
+
+        <div class="action-buttons" id="action-buttons">
+            <button class="btn btn-true" onclick="submitAnswer(false)">진짜 (True)</button>
+            <button class="btn btn-fake" onclick="submitAnswer(true)">가짜 (False)</button>
+        </div>
+
+        <button class="btn btn-next" id="btn-next" onclick="loadNextQuestion()">다음 문제로 ➡️</button>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <h2 class="result-title">게임 종료</h2>
+        <div class="result-score" id="final-score-text"></div>
+        <button class="btn btn-restart" onclick="restartGame()">다시 시작하기 🔄</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            "headline": "프란치스코 교황, 명품 브랜드의 하얀색 롱패딩을 입고 거리 활보해 화제",
+            "isFake": true,
+            "reason": "SNS에 올라온 AI 생성 이미지 해프닝. 물병을 든 오른손을 보면 뭉개져있다. 이미지 생성 프로그램 '미드저니'로 만든 가짜 사진인데, 옷이 진짜 같아서 유명 외신들까지 속아 기사로 다루었다.",
+            "image": "교황.jpg"
+        }, 
+        {
+            "headline": "경상북도 고령군의 한 목장에서 암사자가 탈출해 인근 주민 대피령 발령",
+            "isFake": false,
+            "reason": "실제 발생한 사건. 한 목장에서 기르던 암사자 '사순이'가 우리를 탈출해 인근 주민들에게 재난 문자가 발송되고 등산객이 긴급 대피하는 소동이 벌어졌으며, 탈출 1시간여 만에 인근 숲에서 발견되어 사살되었다.",
+            "image": "뉴스.jpg"
+        }, 
+        {
+            "headline": "태평양 무인도에 고립된 선원들이 해변에 야자수 잎으로 'HELP'를 적어 9일 만에 극적 구조",
+            "isFake": false,
+            "reason": "실화. 미크로네시아의 한 무인도 근처에서 낚시를 하던 선원 3명이 보트 모터 고장으로 고립되었는데, 해변에 야자수 잎으로 크게 'HELP' 문구를 만들어 놓았다. 마침 상공을 수색 중이던 미 해군 정찰기가 이를 발견해 전원 무사히 구조되었다.",
+            "image": "도움.jpg"
+        }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    const totalTime = 10;
+
+    const newsCard = document.getElementById('news-card');
+    const imageWrap = document.getElementById('image-wrap');
+    const newsHeadline = document.getElementById('news-headline');
+    const progressText = document.getElementById('progress-text');
+    const timerBar = document.getElementById('timer-bar');
+    const explanationBox = document.getElementById('explanation-box');
+    const resultStatus = document.getElementById('result-status');
+    const reasonText = document.getElementById('reason-text');
+    const actionButtons = document.getElementById('action-buttons');
+    const btnNext = document.getElementById('btn-next');
+    const playArea = document.getElementById('play-area');
+    const resultScreen = document.getElementById('result-screen');
+    const finalScoreText = document.getElementById('final-score-text');
+
+    function initQuiz() {
+        currentIndex = 0;
+        score = 0;
+        playArea.style.display = 'block';
+        resultScreen.style.display = 'none';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const currentQuiz = quizData[currentIndex];
+        
+        newsCard.className = 'card';
+        explanationBox.style.display = 'none';
+        explanationBox.className = 'explanation-box';
+        btnNext.style.display = 'none';
+        actionButtons.style.display = 'grid';
+        
+        progressText.innerText = `${currentIndex + 1} / ${quizData.length}`;
+        newsHeadline.innerText = currentQuiz.headline;
+
+        if (currentQuiz.image) {
+            imageWrap.innerHTML = `<img src="${currentQuiz.image}" alt="뉴스 이미지">`;
+            imageWrap.style.display = 'block';
+        } else {
+            imageWrap.style.display = 'none';
+            imageWrap.innerHTML = '';
+        }
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = totalTime;
+        updateTimerBar();
+
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                handleTimeout();
+            }
+            updateTimerBar();
+        }, 100);
+    }
+
+    function updateTimerBar() {
+        const percentage = (timeLeft / totalTime) * 100;
+        timerBar.style.width = percentage + '%';
+        
+        if (timeLeft <= 3) {
+            timerBar.style.backgroundColor = '#ef4444';
+            timerBar.style.boxShadow = '0 0 8px #ef4444';
+        } else {
+            timerBar.style.backgroundColor = '#06b6d4';
+            timerBar.style.boxShadow = '0 0 8px #06b6d4';
+        }
+    }
+
+    function submitAnswer(userGuessIsFake) {
+        clearInterval(timerInterval);
+        const currentQuiz = quizData[currentIndex];
+        const isCorrect = (userGuessIsFake === currentQuiz.isFake);
+
+        actionButtons.style.display = 'none';
+
+        if (isCorrect) {
+            score++;
+            newsCard.classList.add('correct');
+            explanationBox.classList.add('correct');
+            resultStatus.innerText = '⭕ 정답입니다.';
+        } else {
+            newsCard.classList.add('incorrect');
+            explanationBox.classList.add('incorrect');
+            resultStatus.innerText = '❌ 오답입니다.';
+        }
+
+        reasonText.innerText = currentQuiz.reason;
+        explanationBox.style.display = 'block';
+        btnNext.style.display = 'block';
+    }
+
+    function handleTimeout() {
+        actionButtons.style.display = 'none';
+        newsCard.classList.add('incorrect');
+        explanationBox.classList.add('incorrect');
+        resultStatus.innerText = '⏱️ 시간 초과 (오답 처리)';
+        
+        reasonText.innerText = quizData[currentIndex].reason;
+        explanationBox.style.display = 'block';
+        btnNext.style.display = 'block';
+    }
+
+    function loadNextQuestion() {
+        currentIndex++;
+        if (currentIndex < quizData.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        playArea.style.display = 'none';
+        resultScreen.style.display = 'block';
+        finalScoreText.innerText = `총 ${quizData.length}문제 중 ${score}문제를 맞혔습니다.`;
+    }
+
+    function restartGame() {
+        initQuiz();
+    }
+
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
